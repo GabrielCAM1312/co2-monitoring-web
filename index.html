@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CO₂ Board</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <h2>CO₂ Board</h2>
+    <nav>
+      <ul>
+        <li><button onclick="showSection('dashboard')">Dashboard</button></li>
+        <li><button onclick="showSection('historis')">Data Historis</button></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main>
+    <section id="dashboard" class="content-section active">
+      <h1>Monitoring CO₂ Basement</h1>
+      <p>09/02/2026, 01.08.22 | Koneksi: Dummy Mode</p>
+      <p>Nilai CO₂ Saat Ini: <strong id="latestValue">2000 ppm</strong></p>
+      <p>Status udara: <span class="status tinggi" id="statusLabel">Berbahaya</span></p>
+      <h2>Grafik Kadar CO₂</h2>
+
+      <div class="time-filter">
+        <label for="startTime">Dari:</label>
+        <input type="datetime-local" id="startTime" />
+        <label for="endTime">Sampai:</label>
+        <input type="datetime-local" id="endTime" />
+        <button onclick="applyTimeFilter()" class="btn">Terapkan</button>
+        <button onclick="resetGraph()" class="btn">Kembali ke Awal</button>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="co2Chart"></canvas>
+      </div>
+    </section>
+
+    <section id="historis" class="content-section">
+      <h2>Data Historis</h2>
+      <table>
+        <thead>
+          <tr><th>Waktu</th><th>CO₂ (ppm)</th></tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+      </table>
+      <form id="filterForm">
+        <label for="startDate">Dari:</label>
+        <input type="date" id="startDate" required />
+        <label for="endDate">Sampai:</label>
+        <input type="date" id="endDate" required />
+        <button type="submit" class="btn">Tampilkan</button>
+      </form>
+      <button id="downloadBtn" class="btn">Download CSV</button>
+    </section>
+  </main>
+
+  <script src="firebase-config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
