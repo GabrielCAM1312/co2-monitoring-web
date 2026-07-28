@@ -82,7 +82,7 @@ const co2Chart = new Chart(ctx, {
           maxRotation: 0,     // Label tetap mendatar rapi
           autoSkip: true      // Otomatis melompati label jika terlalu rapat
         },
-        title: { display: true, text: "Waktu Pengamatan (Jam:Menit)", font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' }, color: "#475569" }
+        title: { display: true, text: "Tanggal & Waktu Pengamatan (Tgl Bln, Jam:Menit)", font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' }, color: "#475569" }
       }
     }
   }
@@ -211,10 +211,17 @@ function renderTable(dataset) {
 function updateChart(dataset) {
   currentActiveDataset = dataset;
 
+  // Format label X-axis agar menampilkan Tanggal dan Jam secara rapi (misal: "12 Jul, 11:25")
   const formatTimeLabel = (item) => {
     if (item.timestamp && !isNaN(item.timestamp)) {
       const d = new Date(item.timestamp);
-      return d.toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' });
+      const day = String(d.getDate()).padStart(2, '0');
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+      const monthStr = monthNames[d.getMonth()];
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+
+      return `${day} ${monthStr}, ${hours}:${mins}`;
     }
     return item.waktu;
   };
