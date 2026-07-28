@@ -310,48 +310,34 @@ function updateStatus() {
   updateActionAdvisory(latest);
 }
 
-// === Update Panel Rekomendasi Tindakan Operasional ===
+// === Update Panel Rekomendasi Tindakan Operasional (Simple Mode) ===
 function updateActionAdvisory(latestCo2) {
   const badgeEl = document.getElementById("advisoryBadge");
   const iconBgEl = document.getElementById("advisoryIconBg");
-  const step1El = document.getElementById("actionStep1");
-  const step2El = document.getElementById("actionStep2");
-  const step3El = document.getElementById("actionStep3");
+  const textEl = document.getElementById("actionSimpleText");
 
-  if (!badgeEl || !step1El || !step2El || !step3El) return;
+  if (!badgeEl || !textEl) return;
 
   if (latestCo2 >= 2000) {
     badgeEl.textContent = "🚨 BAHAYA KRITIS!";
     badgeEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 animate-pulse border border-red-300";
-    if (iconBgEl) iconBgEl.className = "p-3 bg-red-100 text-red-600 rounded-2xl";
-
-    step1El.textContent = "Defisit Oksigen Kritis! Kualitas udara di tingkat berbahaya.";
-    step2El.textContent = "Nyalakan seluruh Exhaust Fan & Blower Darurat ke kecepatan MAKSIMAL (100%).";
-    step3El.textContent = "EVAKUASI SELURUH PENGHUNI AREA & Buka seluruh pintu darurat!";
+    if (iconBgEl) iconBgEl.className = "p-3 bg-red-100 text-red-600 rounded-xl";
+    textEl.textContent = "EVAKUASI AREA! Nyalakan Exhaust Fan & Blower Darurat ke Kecepatan Maksimal (100%).";
   } else if (latestCo2 >= 1000) {
-    badgeEl.textContent = "⚠️ Tingkatkan Ventilasi!";
+    badgeEl.textContent = "⚠️ Buruk / Sumpek";
     badgeEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200";
-    if (iconBgEl) iconBgEl.className = "p-3 bg-orange-100 text-orange-600 rounded-2xl";
-
-    step1El.textContent = "Udara jenuh & sumpek. Risiko pusing dan konsentrasi menurun.";
-    step2El.textContent = "Aktifkan Blower Tambahan & Exhaust Fan ke High Speed Mode.";
-    step3El.textContent = "Buka pintu pasokan udara luar & batasi kapasitas penghuni sementara.";
+    if (iconBgEl) iconBgEl.className = "p-3 bg-orange-100 text-orange-600 rounded-xl";
+    textEl.textContent = "Udara sumpek. Aktifkan Blower tambahan ke High Speed & buka ventilasi udara luar.";
   } else if (latestCo2 >= 700) {
     badgeEl.textContent = "⚡ Waspada Sirkulasi";
     badgeEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200";
-    if (iconBgEl) iconBgEl.className = "p-3 bg-amber-100 text-amber-600 rounded-2xl";
-
-    step1El.textContent = "Konsentrasi CO₂ mulai meningkat melebihi batas ideal.";
-    step2El.textContent = "Tingkatkan sirkulasi Exhaust Fan ke kecepatan sedang (Medium Speed).";
-    step3El.textContent = "Periksa saluran udara alami / buka ventilasi pintu tambahan.";
+    if (iconBgEl) iconBgEl.className = "p-3 bg-amber-100 text-amber-600 rounded-xl";
+    textEl.textContent = "Udara mulai jenuh. Tingkatkan sirkulasi Exhaust Fan ke Kecepatan Sedang (Medium Speed).";
   } else {
     badgeEl.textContent = "🟢 Kualitas Udara Optimal";
     badgeEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200";
-    if (iconBgEl) iconBgEl.className = "p-3 bg-emerald-50 text-emerald-600 rounded-2xl";
-
-    step1El.textContent = "Kualitas udara sangat baik & segar. Sirkulasi stabil.";
-    step2El.textContent = "Operasikan Exhaust Fan kecepatan normal standar (Eco Mode).";
-    step3El.textContent = "Aman untuk seluruh aktivitas pekerjaan & kunjungan area.";
+    if (iconBgEl) iconBgEl.className = "p-3 bg-emerald-50 text-emerald-600 rounded-xl";
+    textEl.textContent = "Kualitas udara sangat baik. Pertahankan sirkulasi standar (Eco Mode).";
   }
 }
 
@@ -446,27 +432,59 @@ function updateChart(dataset) {
     const maxVal = Math.max(...co2Values);
     co2Chart.options.scales.y.min = Math.max(0, Math.floor((minVal - 50) / 50) * 50);
     co2Chart.options.scales.y.suggestedMax = Math.max(1200, Math.ceil((maxVal + 100) / 100) * 100);
-  }
-
   co2Chart.data.labels = limitedDataset.map(item => formatTimeLabel(item));
   co2Chart.data.datasets[0].data = limitedDataset.map(item => item.co2);
   co2Chart.data.datasets[0].pointBackgroundColor = limitedDataset.map(item => colorPoint(item.co2));
 
-  if (limitedDataset.length > 50) {
-    co2Chart.data.datasets[0].pointRadius = 2;
-    co2Chart.data.datasets[0].pointHoverRadius = 6;
-  } else if (limitedDataset.length > 20) {
-    co2Chart.data.datasets[0].pointRadius = 3.5;
-    co2Chart.data.datasets[0].pointHoverRadius = 7;
+  // Terapkan mode grafik yang sedang aktif
+  if (currentChartMode === 'bar') {
+    co2Chart.config.type = 'bar';
+    co2Chart.data.datasets[0].type = 'bar';
+    co2Chart.data.datasets[0].backgroundColor = limitedDataset.map(item => colorPoint(item.co2));
+    co2Chart.data.datasets[0].borderColor = limitedDataset.map(item => colorPoint(item.co2));
+    co2Chart.data.datasets[0].borderWidth = 1;
+    co2Chart.data.datasets[0].borderRadius = 4;
+    co2Chart.data.datasets[0].stepped = false;
+    co2Chart.data.datasets[0].fill = false;
+  } else if (currentChartMode === 'stepped') {
+    co2Chart.config.type = 'line';
+    co2Chart.data.datasets[0].type = 'line';
+    co2Chart.data.datasets[0].stepped = true;
+    co2Chart.data.datasets[0].borderColor = "#10b981";
+    co2Chart.data.datasets[0].backgroundColor = "rgba(16, 185, 129, 0.1)";
+    co2Chart.data.datasets[0].fill = true;
   } else {
-    co2Chart.data.datasets[0].pointRadius = 5;
-    co2Chart.data.datasets[0].pointHoverRadius = 8;
+    co2Chart.config.type = 'line';
+    co2Chart.data.datasets[0].type = 'line';
+    co2Chart.data.datasets[0].stepped = false;
+    co2Chart.data.datasets[0].borderColor = "#10b981";
+    co2Chart.data.datasets[0].backgroundColor = gradientBg;
+    co2Chart.data.datasets[0].fill = true;
   }
 
   co2Chart.update();
 
   // Otomatis hitung dan perbarui kartu analisis statistik
   updateAnalytics(limitedDataset);
+}
+
+// === 3 Mode Tampilan Grafik Switcher ('line', 'bar', 'stepped') ===
+let currentChartMode = 'line';
+
+function setChartMode(mode) {
+  currentChartMode = mode;
+
+  // Update tombol mode aktif
+  document.querySelectorAll(".chart-mode-btn").forEach(btn => {
+    btn.className = "chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 bg-transparent";
+  });
+  const activeBtn = document.getElementById(`mode-btn-${mode}`);
+  if (activeBtn) {
+    activeBtn.className = "chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow-xs";
+  }
+
+  if (!currentActiveDataset || currentActiveDataset.length === 0) return;
+  updateChart(currentActiveDataset);
 }
 
 // === 6. Filter Preset Otomatis & Custom Grafik Dashboard ===
