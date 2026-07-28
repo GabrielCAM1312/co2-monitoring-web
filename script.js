@@ -425,13 +425,13 @@ function updateChart(dataset) {
     return item.waktu;
   };
 
-  // Skala Y-axis dinamis yang proporsional agar kurva grafik tidak gepeng
-  const co2Values = limitedDataset.map(item => item.co2);
   if (co2Values.length > 0) {
     const minVal = Math.min(...co2Values);
     const maxVal = Math.max(...co2Values);
     co2Chart.options.scales.y.min = Math.max(0, Math.floor((minVal - 50) / 50) * 50);
     co2Chart.options.scales.y.suggestedMax = Math.max(1200, Math.ceil((maxVal + 100) / 100) * 100);
+  }
+
   co2Chart.data.labels = limitedDataset.map(item => formatTimeLabel(item));
   co2Chart.data.datasets[0].data = limitedDataset.map(item => item.co2);
   co2Chart.data.datasets[0].pointBackgroundColor = limitedDataset.map(item => colorPoint(item.co2));
