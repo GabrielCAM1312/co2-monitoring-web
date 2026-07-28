@@ -149,18 +149,43 @@ function updateChart(dataset) {
   co2Chart.update();
 }
 
+// Helper parsing baris data Supabase secara konsisten
+function parseRowData(row) {
+  let rawTime = row.waktu || row.created_at || row.timestamp;
+  let dateObj = (rawTime && !isNaN(Date.parse(rawTime))) ? new Date(rawTime) : null;
+  let formattedTime = dateObj ? dateObj.toLocaleString("id-ID") : String(rawTime || "N/A");
+  
+  return {
+    waktu: formattedTime,
+    timestamp: dateObj ? dateObj.getTime() : (rawTime ? new Date(rawTime).getTime() : NaN),
+    rawTime: rawTime,
+    co2: Number(row.co2 !== undefined ? row.co2 : (row.kadar_co2 !== undefined ? row.kadar_co2 : 0))
+  };
+}
+
 // === 6. Filter Grafik Dashboard ===
 function applyTimeFilter() {
   const startInput = document.getElementById("startTime").value;
   const endInput = document.getElementById("endTime").value;
   if (!startInput || !endInput) return alert("Pilih kedua rentang waktu terlebih dahulu.");
 
-  const start = new Date(startInput);
-  const end = new Date(endInput);
+  const startMs = new Date(startInput).getTime();
+  const endMs = new Date(endInput).getTime();
+
+  if (isNaN(startMs) || isNaN(endMs)) return alert("Format tanggal/waktu yang dimasukkan tidak valid.");
+
   const filtered = data.filter(item => {
-    const waktu = new Date(item.waktu);
-    return waktu >= start && waktu <= end;
+    let itemMs = item.timestamp;
+    if (isNaN(itemMs)) {
+      itemMs = new Date(item.rawTime || item.waktu).getTime();
+    }
+    return !isNaN(itemMs) && itemMs >= startMs && itemMs <= endMs;
   });
+
+  if (filtered.length === 0) {
+    alert("Tidak ditemukan data pada rentang waktu yang dipilih.");
+    return;
+  }
   updateChart(filtered);
 }
 
@@ -222,18 +247,7 @@ async function fetchSupabaseData() {
         statusEl.className = "text-sm font-semibold text-emerald-600 mt-1 flex items-center gap-1.5";
       }
 
-      data = res.data.map(row => {
-        let rawTime = row.waktu || row.created_at || row.timestamp;
-        let formattedTime = rawTime;
-        if (rawTime && !isNaN(Date.parse(rawTime))) {
-          formattedTime = new Date(rawTime).toLocaleString("id-ID");
-        }
-        return {
-          waktu: formattedTime || "N/A",
-          co2: Number(row.co2 !== undefined ? row.co2 : (row.kadar_co2 !== undefined ? row.kadar_co2 : 0))
-        };
-      });
-
+      data = res.data.map(parseRowData);
       dataHistorisFiltered = [...data];
       updateChart(data);
       renderTable(dataHistorisFiltered);
@@ -277,17 +291,7 @@ if (filterForm) {
     if (res.error) {
       alert("Gagal memuat data historis: " + res.error.message);
     } else if (res.data) {
-      dataHistorisFiltered = res.data.map(row => {
-        let rawTime = row.waktu || row.created_at || row.timestamp;
-        let formattedTime = rawTime;
-        if (rawTime && !isNaN(Date.parse(rawTime))) {
-          formattedTime = new Date(rawTime).toLocaleString("id-ID");
-        }
-        return {
-          waktu: formattedTime || "N/A",
-          co2: Number(row.co2 !== undefined ? row.co2 : (row.kadar_co2 !== undefined ? row.kadar_co2 : 0))
-        };
-      });
+      dataHistorisFiltered = res.data.map(parseRowData);
       renderTable(dataHistorisFiltered);
     }
   });
@@ -320,15 +324,7 @@ if (realtimeClient && typeof realtimeClient.channel === "function") {
     realtimeClient
       .channel("co2_realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: getTableName() }, (payload) => {
-        let rawTime = payload.new.waktu || payload.new.created_at || payload.new.timestamp;
-        let formattedTime = rawTime;
-        if (rawTime && !isNaN(Date.parse(rawTime))) {
-          formattedTime = new Date(rawTime).toLocaleString("id-ID");
-        }
-        const newData = {
-          waktu: formattedTime || "N/A",
-          co2: Number(payload.new.co2 !== undefined ? payload.new.co2 : (payload.new.kadar_co2 !== undefined ? payload.new.kadar_co2 : 0))
-        };
+        const newData = parseRowData(payload.new);
         data.push(newData);
         updateChart(data);
         renderTable(dataHistorisFiltered.length > 0 ? dataHistorisFiltered : data);
