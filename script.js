@@ -256,9 +256,11 @@ function renderTable(dataset) {
   }).join("");
 }
 
-// === 5. Render Grafik Rapih & Proporsional ===
+// === 5. Render Grafik Rapih & Proporsional (Maksimal 100 Data) ===
 function updateChart(dataset) {
-  currentActiveDataset = dataset;
+  // Batasi grafik HANYA menampilkan maksimal 100 data saja agar grafik selalu mudah dibaca
+  const limitedDataset = dataset.length > 100 ? dataset.slice(-100) : dataset;
+  currentActiveDataset = limitedDataset;
 
   // Format label X-axis agar menampilkan Tanggal dan Jam secara rapi (misal: "12 Jul, 11:25")
   const formatTimeLabel = (item) => {
@@ -275,14 +277,14 @@ function updateChart(dataset) {
     return item.waktu;
   };
 
-  co2Chart.data.labels = dataset.map(item => formatTimeLabel(item));
-  co2Chart.data.datasets[0].data = dataset.map(item => item.co2);
-  co2Chart.data.datasets[0].pointBackgroundColor = dataset.map(item => colorPoint(item.co2));
+  co2Chart.data.labels = limitedDataset.map(item => formatTimeLabel(item));
+  co2Chart.data.datasets[0].data = limitedDataset.map(item => item.co2);
+  co2Chart.data.datasets[0].pointBackgroundColor = limitedDataset.map(item => colorPoint(item.co2));
 
-  if (dataset.length > 50) {
+  if (limitedDataset.length > 50) {
     co2Chart.data.datasets[0].pointRadius = 2;
     co2Chart.data.datasets[0].pointHoverRadius = 6;
-  } else if (dataset.length > 20) {
+  } else if (limitedDataset.length > 20) {
     co2Chart.data.datasets[0].pointRadius = 3.5;
     co2Chart.data.datasets[0].pointHoverRadius = 7;
   } else {
