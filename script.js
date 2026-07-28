@@ -256,6 +256,40 @@ function renderTable(dataset) {
   }).join("");
 }
 
+// Update Statistik Analisis (Min, Max, Rata-rata CO2)
+function updateAnalytics(dataset) {
+  if (!dataset || dataset.length === 0) return;
+
+  const minCo2El = document.getElementById("minCo2Value");
+  const minCo2TimeEl = document.getElementById("minCo2Time");
+  const maxCo2El = document.getElementById("maxCo2Value");
+  const maxCo2TimeEl = document.getElementById("maxCo2Time");
+  const avgCo2El = document.getElementById("avgCo2Value");
+
+  if (!minCo2El || !maxCo2El || !avgCo2El) return;
+
+  let minObj = dataset[0];
+  let maxObj = dataset[0];
+  let sum = 0;
+
+  dataset.forEach(item => {
+    const val = item.co2;
+    sum += val;
+    if (val < minObj.co2) minObj = item;
+    if (val > maxObj.co2) maxObj = item;
+  });
+
+  const avgVal = Math.round(sum / dataset.length);
+
+  minCo2El.textContent = minObj.co2;
+  if (minCo2TimeEl) minCo2TimeEl.textContent = `Waktu: ${minObj.waktu}`;
+
+  maxCo2El.textContent = maxObj.co2;
+  if (maxCo2TimeEl) maxCo2TimeEl.textContent = `Waktu: ${maxObj.waktu}`;
+
+  avgCo2El.textContent = avgVal;
+}
+
 // === 5. Render Grafik Rapih & Proporsional (Maksimal 100 Data) ===
 function updateChart(dataset) {
   // Batasi grafik HANYA menampilkan maksimal 100 data saja agar grafik selalu mudah dibaca
@@ -293,6 +327,9 @@ function updateChart(dataset) {
   }
 
   co2Chart.update();
+
+  // Otomatis hitung dan perbarui kartu analisis statistik
+  updateAnalytics(limitedDataset);
 }
 
 // === 6. Filter Preset Otomatis & Custom Grafik Dashboard ===

@@ -172,6 +172,60 @@
         </div>
       </div>
 
+      <!-- Kartu Analisis Statistik (Min, Max, Rata-rata CO2) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <!-- Card 1: CO2 Terendah (Min) -->
+        <div class="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">CO₂ Terendah (Min)</span>
+            <div class="mt-2 flex items-baseline gap-1.5">
+              <span id="minCo2Value" class="text-2xl md:text-3xl font-extrabold text-emerald-600 tracking-tight">--</span>
+              <span class="text-xs font-bold text-slate-400">ppm</span>
+            </div>
+            <span id="minCo2Time" class="text-[11px] text-slate-400 font-medium mt-1 block">Tercatat: --</span>
+          </div>
+          <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Card 2: CO2 Tertinggi (Max) -->
+        <div class="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">CO₂ Puncak (Max)</span>
+            <div class="mt-2 flex items-baseline gap-1.5">
+              <span id="maxCo2Value" class="text-2xl md:text-3xl font-extrabold text-red-600 tracking-tight">--</span>
+              <span class="text-xs font-bold text-slate-400">ppm</span>
+            </div>
+            <span id="maxCo2Time" class="text-[11px] text-slate-400 font-medium mt-1 block">Tercatat: --</span>
+          </div>
+          <div class="p-3 bg-red-50 text-red-600 rounded-xl">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Card 3: Rata-rata CO2 (Average) -->
+        <div class="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Rata-Rata CO₂ (Avg)</span>
+            <div class="mt-2 flex items-baseline gap-1.5">
+              <span id="avgCo2Value" class="text-2xl md:text-3xl font-extrabold text-blue-600 tracking-tight">--</span>
+              <span class="text-xs font-bold text-slate-400">ppm</span>
+            </div>
+            <span id="avgCo2Status" class="text-[11px] text-slate-400 font-medium mt-1 block">Rata-rata sampel aktif</span>
+          </div>
+          <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
       <!-- Filter Waktu & Controls Grafik Otomatis -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
