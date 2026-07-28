@@ -599,12 +599,20 @@ async function fetchSupabaseData() {
   }
 
   try {
-    // Ambil data terbaru dari tabel monitoring (diurutkan berdasarkan waktu descending)
+    // Ambil data terbaru dari tabel monitoring berdasarkan ID descending (paling stabil)
     let res = await client
       .from(getTableName())
       .select("*")
-      .order("waktu", { ascending: false })
+      .order("id", { ascending: false })
       .limit(1000);
+
+    // Fallback jika kolom 'id' tidak tersedia
+    if (res.error) {
+      res = await client
+        .from(getTableName())
+        .select("*")
+        .limit(1000);
+    }
 
     if (res.error) {
       console.error("Gagal terhubung ke Supabase:", res.error);
@@ -618,7 +626,7 @@ async function fetchSupabaseData() {
         statusEl.className = "text-sm font-semibold text-emerald-600 mt-1 flex items-center gap-1.5";
       }
 
-      // Urutkan secara kronologis (terlama ke terbaru) untuk grafik
+      // Urutkan secara kronologis (dari id terlama ke terbaru) untuk grafik
       allSupabaseRecords = res.data.reverse().map(parseRowData);
       dataHistorisFiltered = [...allSupabaseRecords];
 
@@ -630,6 +638,10 @@ async function fetchSupabaseData() {
     }
   } catch (error) {
     console.error("Error pada fetchSupabaseData:", error);
+    if (statusEl) {
+      statusEl.textContent = "❌ Status Koneksi: Gagal Terhubung! (" + error.message + ")";
+      statusEl.className = "text-sm font-semibold text-red-600 mt-1 flex items-center gap-1.5";
+    }
   }
 }
 
