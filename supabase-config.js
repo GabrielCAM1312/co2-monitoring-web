@@ -13,6 +13,8 @@ const BACKEND_SERVICE_ROLE_KEY = ""; // Masukkan Service Role Key di sini jika d
 // 3. NAMA TABEL MONITORING (Default: "monitoring")
 const SUPABASE_TABLE_NAME = "monitoring";
 
-// Inisialisasi Supabase Client
-const { createClient } = window.supabase;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Inisialisasi Supabase Client dan simpan ke window.supabase
+if (window.supabase && typeof window.supabase.createClient === "function") {
+  window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+var supabase = window.supabase;

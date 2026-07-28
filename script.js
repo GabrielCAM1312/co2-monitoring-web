@@ -170,11 +170,23 @@ function resetGraph() {
   document.getElementById("endTime").value = "";
 }
 
+// Helper aman untuk mendapatkan Supabase Client Instance
+function getSupabaseClient() {
+  if (window.supabase && typeof window.supabase.from === "function") {
+    return window.supabase;
+  }
+  if (typeof supabase !== "undefined" && supabase && typeof supabase.from === "function") {
+    return supabase;
+  }
+  return null;
+}
+
 // === 7. Fetch Supabase Data (50 Data Terbaru) ===
 async function fetchSupabaseData() {
   const statusEl = document.getElementById("connectionStatus");
+  const client = getSupabaseClient();
 
-  if (!window.supabase || typeof window.supabase.from !== "function") {
+  if (!client) {
     if (statusEl) {
       statusEl.textContent = "⚠️ Status Koneksi: Menunggu Supabase API Key...";
       statusEl.className = "text-sm font-semibold text-amber-600 mt-1 flex items-center gap-1.5";
@@ -183,7 +195,7 @@ async function fetchSupabaseData() {
   }
 
   try {
-    const { data: fetchedData, error } = await supabase
+    const { data: fetchedData, error } = await client
       .from(getTableName())
       .select("*")
       .order("created_at", { ascending: false })
@@ -221,7 +233,8 @@ const filterForm = document.getElementById("filterForm");
 if (filterForm) {
   filterForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!window.supabase || typeof window.supabase.from !== "function") {
+    const client = getSupabaseClient();
+    if (!client) {
       return alert("Supabase belum terhubung. Silakan periksa kredensial Supabase Anda.");
     }
 
@@ -231,7 +244,7 @@ if (filterForm) {
     const startISO = new Date(startDate).toISOString();
     const endISO = new Date(new Date(endDate).setHours(23, 59, 59, 999)).toISOString();
 
-    const { data: historisData, error } = await supabase
+    const { data: historisData, error } = await client
       .from(getTableName())
       .select("*")
       .gte("created_at", startISO)
@@ -271,9 +284,10 @@ function downloadCSV() {
 }
 
 // === 10. Real-time Subscription ===
-if (window.supabase && typeof window.supabase.channel === "function") {
+const realtimeClient = getSupabaseClient();
+if (realtimeClient && typeof realtimeClient.channel === "function") {
   try {
-    supabase
+    realtimeClient
       .channel("co2_realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: getTableName() }, (payload) => {
         const newData = {
