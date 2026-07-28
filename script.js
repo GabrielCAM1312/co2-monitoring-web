@@ -99,7 +99,7 @@ function parseCustomDate(str) {
 
   let cleanStr = String(str).trim();
 
-  // Jika format ISO (YYYY-MM-DD atau ISO String)
+  // Jika format ISO (YYYY-MM-DD atau ISO String seperti 2026-07-12T11:25:16)
   let d = new Date(cleanStr);
   if (!isNaN(d.getTime()) && (cleanStr.includes("-") || cleanStr.includes("T"))) {
     return d;
@@ -247,27 +247,14 @@ function filterQuick(hours) {
     activeBtn.className = "preset-btn px-3.5 py-2 rounded-xl font-bold text-xs bg-emerald-600 text-white border border-emerald-600 shadow-sm transition";
   }
 
-  const now = new Date();
-  const past = new Date(now.getTime() - hours * 60 * 60 * 1000);
+  if (allSupabaseRecords.length === 0) return;
 
-  const formatInputDateTime = (d) => {
-    const tzOffset = d.getTimezoneOffset() * 60000;
-    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
-  };
-
-  const startEl = document.getElementById("startTime");
-  const endEl = document.getElementById("endTime");
-
-  if (startEl && endEl) {
-    startEl.value = formatInputDateTime(past);
-    endEl.value = formatInputDateTime(now);
-  }
-
-  const startMs = past.getTime();
-  const endMs = now.getTime();
+  const lastRecord = allSupabaseRecords[allSupabaseRecords.length - 1];
+  const referenceMs = lastRecord && !isNaN(lastRecord.timestamp) ? lastRecord.timestamp : new Date().getTime();
+  const pastMs = referenceMs - hours * 60 * 60 * 1000;
 
   const filtered = allSupabaseRecords.filter(item => {
-    return !isNaN(item.timestamp) && item.timestamp >= startMs && item.timestamp <= endMs;
+    return !isNaN(item.timestamp) && item.timestamp >= pastMs && item.timestamp <= referenceMs;
   });
 
   if (filtered.length > 0) {
@@ -299,7 +286,7 @@ function applyTimeFilter() {
 }
 
 function resetGraph() {
-  filterQuick(24);
+  updateChart(allSupabaseRecords);
 }
 
 // Helper aman untuk mendapatkan Supabase Client Instance
@@ -313,7 +300,7 @@ function getSupabaseClient() {
   return null;
 }
 
-// === 7. Fetch Supabase Data (Mengambil Seluruh Data dari Database) ===
+// === 7. Fetch Supabase Data (Mengambil Rekod Terbaru dari Database) ===
 async function fetchSupabaseData() {
   const statusEl = document.getElementById("connectionStatus");
   const client = getSupabaseClient();
@@ -327,9 +314,12 @@ async function fetchSupabaseData() {
   }
 
   try {
+    // Ambil data terbaru dari tabel monitoring (diurutkan berdasarkan waktu descending)
     let res = await client
       .from(getTableName())
-      .select("*");
+      .select("*")
+      .order("waktu", { ascending: false })
+      .limit(1000);
 
     if (res.error) {
       console.error("Gagal terhubung ke Supabase:", res.error);
@@ -343,24 +333,21 @@ async function fetchSupabaseData() {
         statusEl.className = "text-sm font-semibold text-emerald-600 mt-1 flex items-center gap-1.5";
       }
 
-      // Parse semua record dan urutkan berdasarkan timestamp secara kronologis
-      allSupabaseRecords = res.data.map(parseRowData).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      // Urutkan secara kronologis (terlama ke terbaru) untuk grafik
+      allSupabaseRecords = res.data.reverse().map(parseRowData);
       data = [...allSupabaseRecords];
       dataHistorisFiltered = [...data];
 
       updateChart(data);
       renderTable(dataHistorisFiltered);
       updateStatus();
-
-      // Aktifkan preset 24 jam otomatis jika data banyak
-      filterQuick(24);
     }
   } catch (error) {
     console.error("Error pada fetchSupabaseData:", error);
   }
 }
 
-// === 8. Filter Form Historis ===
+// === 8. Filter Form Historis (Pencarian Tanggal Presisi) ===
 const filterForm = document.getElementById("filterForm");
 if (filterForm) {
   filterForm.addEventListener("submit", async (e) => {
@@ -371,26 +358,39 @@ if (filterForm) {
 
     if (!startVal || !endVal) return alert("Pilih tanggal awal dan tanggal akhir terlebih dahulu.");
 
-    const startDateObj = new Date(startVal + "T00:00:00");
-    const endDateObj = new Date(endVal + "T23:59:59.999");
+    const client = getSupabaseClient();
+    if (!client) return alert("Supabase belum terhubung.");
 
-    const startMs = startDateObj.getTime();
-    const endMs = endDateObj.getTime();
+    const startISO = startVal + "T00:00:00";
+    const endISO = endVal + "T23:59:59";
 
-    if (isNaN(startMs) || isNaN(endMs)) {
-      return alert("Format tanggal yang dimasukkan tidak valid.");
+    // Query Supabase secara langsung dengan rentang tanggal ISO T00:00:00 s.d T23:59:59
+    let res = await client
+      .from(getTableName())
+      .select("*")
+      .gte("waktu", startISO)
+      .lte("waktu", endISO)
+      .order("waktu", { ascending: true })
+      .limit(1000);
+
+    if (!res.error && res.data && res.data.length > 0) {
+      dataHistorisFiltered = res.data.map(parseRowData);
+      renderTable(dataHistorisFiltered);
+    } else {
+      // Fallback: Filter dari data lokal menggunakan milidetik
+      const startMs = new Date(startVal + "T00:00:00").getTime();
+      const endMs = new Date(endVal + "T23:59:59.999").getTime();
+
+      dataHistorisFiltered = allSupabaseRecords.filter(item => {
+        return !isNaN(item.timestamp) && item.timestamp >= startMs && item.timestamp <= endMs;
+      });
+
+      if (dataHistorisFiltered.length === 0) {
+        alert(`Tidak ditemukan data historis pada tanggal ${startVal} s.d ${endVal}.`);
+      }
+
+      renderTable(dataHistorisFiltered);
     }
-
-    // Filter dari seluruh record Supabase menggunakan timestamp milidetik yang presisi
-    dataHistorisFiltered = allSupabaseRecords.filter(item => {
-      return !isNaN(item.timestamp) && item.timestamp >= startMs && item.timestamp <= endMs;
-    });
-
-    if (dataHistorisFiltered.length === 0) {
-      alert(`Tidak ditemukan data historis pada tanggal ${startVal} s.d ${endVal}. Silakan periksa ketersediaan data di database Anda.`);
-    }
-
-    renderTable(dataHistorisFiltered);
   });
 }
 
