@@ -293,7 +293,20 @@ function applyTimeFilter() {
 }
 
 function resetGraph() {
-  updateChart(allSupabaseRecords);
+  // 1. Kosongkan nilai input tanggal & jam custom (startTime dan endTime)
+  const startEl = document.getElementById("startTime");
+  const endEl = document.getElementById("endTime");
+  if (startEl) startEl.value = "";
+  if (endEl) endEl.value = "";
+
+  // 2. Hapus highlight aktif dari tombol preset durasi
+  document.querySelectorAll(".preset-btn").forEach(btn => {
+    btn.className = "preset-btn px-3.5 py-2 rounded-xl font-bold text-xs border border-slate-200 text-slate-600 bg-white hover:bg-slate-100 transition";
+  });
+
+  // 3. Tampilkan kembali grafik dengan seluruh rekaman data dari database
+  data = [...allSupabaseRecords];
+  updateChart(data);
 }
 
 // Helper aman untuk mendapatkan Supabase Client Instance
