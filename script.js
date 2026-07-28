@@ -21,8 +21,47 @@ const gradientBg = ctx.createLinearGradient(0, 0, 0, 400);
 gradientBg.addColorStop(0, "rgba(16, 185, 129, 0.25)");
 gradientBg.addColorStop(1, "rgba(16, 185, 129, 0.0)");
 
+// Plugin custom untuk menggambar garis batas ambang kualitas udara (Threshold Reference Lines)
+const thresholdLinesPlugin = {
+  id: 'thresholdLines',
+  afterDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    if (!scales || !scales.y || !chartArea) return;
+    const { left, right, top, bottom } = chartArea;
+    const y = scales.y;
+
+    const thresholds = [
+      { value: 700, label: "Batas Waspada (700 ppm)", color: "rgba(245, 158, 11, 0.75)", dash: [5, 4] },
+      { value: 1000, label: "Batas Buruk (1000 ppm)", color: "rgba(249, 115, 22, 0.75)", dash: [5, 4] },
+      { value: 2000, label: "Batas Kritis (2000 ppm)", color: "rgba(239, 68, 68, 0.85)", dash: [4, 4] }
+    ];
+
+    ctx.save();
+    thresholds.forEach(t => {
+      const yPos = y.getPixelForValue(t.value);
+      if (yPos >= top && yPos <= bottom) {
+        ctx.beginPath();
+        ctx.setLineDash(t.dash);
+        ctx.strokeStyle = t.color;
+        ctx.lineWidth = 1.5;
+        ctx.moveTo(left, yPos);
+        ctx.lineTo(right, yPos);
+        ctx.stroke();
+
+        // Badge Teks Label Garis Ambang Batas
+        ctx.font = "600 10px 'Plus Jakarta Sans', sans-serif";
+        ctx.fillStyle = t.color;
+        ctx.textAlign = "right";
+        ctx.fillText(t.label, right - 8, yPos - 5);
+      }
+    });
+    ctx.restore();
+  }
+};
+
 const co2Chart = new Chart(ctx, {
   type: "line",
+  plugins: [thresholdLinesPlugin],
   data: {
     labels: [],
     datasets: [{
@@ -50,7 +89,7 @@ const co2Chart = new Chart(ctx, {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: "#0f172a",
+        backgroundColor: "rgba(15, 23, 42, 0.92)",
         titleFont: { family: 'Plus Jakarta Sans', size: 13, weight: 'bold' },
         bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
         padding: 12,
@@ -60,9 +99,19 @@ const co2Chart = new Chart(ctx, {
           title: (tooltipItems) => {
             const dataIndex = tooltipItems[0].dataIndex;
             const currentItem = currentActiveDataset[dataIndex];
-            return currentItem ? `Waktu: ${currentItem.waktu}` : tooltipItems[0].label;
+            return currentItem ? `🕒 Waktu: ${currentItem.waktu}` : tooltipItems[0].label;
           },
-          label: (context) => ` Kadar CO₂: ${context.parsed.y} ppm`
+          label: (context) => {
+            const val = context.parsed.y;
+            let status = "🟢 Normal";
+            if (val >= 2000) status = "🚨 Kritis / Berbahaya";
+            else if (val >= 1000) status = "⚠️ Buruk / Sumpek";
+            else if (val >= 700) status = "⚡ Waspada";
+            return [
+              ` Kadar CO₂: ${val} ppm`,
+              ` Status: ${status}`
+            ];
+          }
         }
       }
     },
