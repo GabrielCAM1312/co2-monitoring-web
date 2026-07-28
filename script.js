@@ -205,7 +205,52 @@ function parseRowData(row) {
   };
 }
 
-// === 6. Filter Grafik Dashboard ===
+// === 6. Filter Preset Otomatis & Custom Grafik Dashboard ===
+function filterQuick(hours) {
+  // Update gaya tombol preset aktif
+  document.querySelectorAll(".preset-btn").forEach(btn => {
+    btn.className = "preset-btn px-3.5 py-2 rounded-xl font-bold text-xs border border-slate-200 text-slate-600 bg-white hover:bg-slate-100 transition";
+  });
+  const activeBtn = document.getElementById(`preset-${hours}h`);
+  if (activeBtn) {
+    activeBtn.className = "preset-btn px-3.5 py-2 rounded-xl font-bold text-xs bg-emerald-600 text-white border border-emerald-600 shadow-sm transition";
+  }
+
+  const now = new Date();
+  const past = new Date(now.getTime() - hours * 60 * 60 * 1000);
+
+  // Format jam untuk input datetime-local HTML
+  const formatInputDateTime = (d) => {
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+  };
+
+  const startEl = document.getElementById("startTime");
+  const endEl = document.getElementById("endTime");
+
+  if (startEl && endEl) {
+    startEl.value = formatInputDateTime(past);
+    endEl.value = formatInputDateTime(now);
+  }
+
+  const startMs = past.getTime();
+  const endMs = now.getTime();
+
+  const filtered = data.filter(item => {
+    let itemMs = item.timestamp;
+    if (isNaN(itemMs)) {
+      itemMs = new Date(item.rawTime || item.waktu).getTime();
+    }
+    return !isNaN(itemMs) && itemMs >= startMs && itemMs <= endMs;
+  });
+
+  if (filtered.length > 0) {
+    updateChart(filtered);
+  } else {
+    updateChart(data);
+  }
+}
+
 function applyTimeFilter() {
   const startInput = document.getElementById("startTime").value;
   const endInput = document.getElementById("endTime").value;
@@ -232,9 +277,7 @@ function applyTimeFilter() {
 }
 
 function resetGraph() {
-  updateChart(data);
-  document.getElementById("startTime").value = "";
-  document.getElementById("endTime").value = "";
+  filterQuick(24);
 }
 
 // Helper aman untuk mendapatkan Supabase Client Instance
@@ -304,6 +347,9 @@ async function fetchSupabaseData() {
       updateChart(data);
       renderTable(dataHistorisFiltered);
       updateStatus();
+
+      // Otomatis isi input waktu dan aktifkan preset 24 Jam
+      filterQuick(24);
     }
   } catch (error) {
     console.error("Error pada fetchSupabaseData:", error);
