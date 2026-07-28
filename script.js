@@ -28,20 +28,24 @@ const co2Chart = new Chart(ctx, {
       label: "Kadar CO₂ (ppm)",
       data: [],
       borderColor: "#10b981",
-      borderWidth: 3,
+      borderWidth: 2.5,
       backgroundColor: gradientBg,
       fill: true,
       tension: 0.35,
-      pointRadius: 5,
+      pointRadius: 4,
       pointHoverRadius: 7,
       pointBackgroundColor: [],
       pointBorderColor: "#ffffff",
-      pointBorderWidth: 2,
+      pointBorderWidth: 1.5,
     }]
   },
   options: {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -52,6 +56,11 @@ const co2Chart = new Chart(ctx, {
         cornerRadius: 10,
         displayColors: false,
         callbacks: {
+          title: (tooltipItems) => {
+            const dataIndex = tooltipItems[0].dataIndex;
+            const currentItem = currentActiveDataset[dataIndex];
+            return currentItem ? `Waktu: ${currentItem.waktu}` : tooltipItems[0].label;
+          },
           label: (context) => ` Kadar CO₂: ${context.parsed.y} ppm`
         }
       }
@@ -65,12 +74,21 @@ const co2Chart = new Chart(ctx, {
       },
       x: { 
         grid: { display: false },
-        ticks: { font: { family: 'Plus Jakarta Sans', size: 11 }, color: "#64748b" },
-        title: { display: true, text: "Waktu Pengamatan", font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' }, color: "#475569" }
+        ticks: { 
+          font: { family: 'Plus Jakarta Sans', size: 11 }, 
+          color: "#64748b",
+          maxTicksLimit: 10,  // Pembatasan maksimal 10 label agar tidak saling menumpuk
+          maxRotation: 0,     // Label tetap mendatar rapi
+          autoSkip: true      // Otomatis melompati label jika terlalu rapat
+        },
+        title: { display: true, text: "Waktu Pengamatan (Jam:Menit)", font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' }, color: "#475569" }
       }
     }
   }
 });
+
+// Variabel untuk melacak dataset aktif pada grafik
+let currentActiveDataset = [];
 
 // === 2. Warna Titik Grafik Berdasarkan Kategori ===
 function colorPoint(value) {
@@ -141,11 +159,35 @@ function renderTable(dataset) {
   }).join("");
 }
 
-// === 5. Render Grafik ===
+// === 5. Render Grafik Rapih & Proporsional ===
 function updateChart(dataset) {
-  co2Chart.data.labels = dataset.map(item => item.waktu);
+  currentActiveDataset = dataset;
+
+  // Format label X-axis agar rapi: jika data lebih dari 15, cukup tampilkan Jam:Menit saja
+  const formatTimeLabel = (item) => {
+    if (item.timestamp && !isNaN(item.timestamp)) {
+      const d = new Date(item.timestamp);
+      return d.toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' });
+    }
+    return item.waktu;
+  };
+
+  co2Chart.data.labels = dataset.map(item => formatTimeLabel(item));
   co2Chart.data.datasets[0].data = dataset.map(item => item.co2);
   co2Chart.data.datasets[0].pointBackgroundColor = dataset.map(item => colorPoint(item.co2));
+
+  // Ukuran titik grafik dinamis: makin banyak data, titik dikecilkan agar garis terlihat bersih
+  if (dataset.length > 50) {
+    co2Chart.data.datasets[0].pointRadius = 2;
+    co2Chart.data.datasets[0].pointHoverRadius = 6;
+  } else if (dataset.length > 20) {
+    co2Chart.data.datasets[0].pointRadius = 3.5;
+    co2Chart.data.datasets[0].pointHoverRadius = 7;
+  } else {
+    co2Chart.data.datasets[0].pointRadius = 5;
+    co2Chart.data.datasets[0].pointHoverRadius = 8;
+  }
+
   co2Chart.update();
 }
 
