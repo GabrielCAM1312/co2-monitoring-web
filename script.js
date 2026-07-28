@@ -225,6 +225,54 @@ function updateStatus() {
     statusLabel.className = "inline-flex items-center px-4 py-2 rounded-xl text-sm font-extrabold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm";
     if (statusAdvice) statusAdvice.textContent = "Kualitas udara sangat baik dan sehat.";
   }
+
+  // Update Panel Rekomendasi Tindakan Operasional
+  updateActionAdvisory(latest);
+}
+
+// === Update Panel Rekomendasi Tindakan Operasional ===
+function updateActionAdvisory(latestCo2) {
+  const badgeEl = document.getElementById("advisoryBadge");
+  const iconBgEl = document.getElementById("advisoryIconBg");
+  const step1El = document.getElementById("actionStep1");
+  const step2El = document.getElementById("actionStep2");
+  const step3El = document.getElementById("actionStep3");
+
+  if (!badgeEl || !step1El || !step2El || !step3El) return;
+
+  if (latestCo2 >= 2000) {
+    badgeEl.textContent = "🚨 BAHAYA KRITIS!";
+    badgeEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 animate-pulse border border-red-300";
+    if (iconBgEl) iconBgEl.className = "p-3 bg-red-100 text-red-600 rounded-2xl";
+
+    step1El.textContent = "Defisit Oksigen Kritis! Kualitas udara di tingkat berbahaya.";
+    step2El.textContent = "Nyalakan seluruh Exhaust Fan & Blower Darurat ke kecepatan MAKSIMAL (100%).";
+    step3El.textContent = "EVAKUASI SELURUH PENGHUNI AREA & Buka seluruh pintu darurat!";
+  } else if (latestCo2 >= 1000) {
+    badgeEl.textContent = "⚠️ Tingkatkan Ventilasi!";
+    badgeEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200";
+    if (iconBgEl) iconBgEl.className = "p-3 bg-orange-100 text-orange-600 rounded-2xl";
+
+    step1El.textContent = "Udara jenuh & sumpek. Risiko pusing dan konsentrasi menurun.";
+    step2El.textContent = "Aktifkan Blower Tambahan & Exhaust Fan ke High Speed Mode.";
+    step3El.textContent = "Buka pintu pasokan udara luar & batasi kapasitas penghuni sementara.";
+  } else if (latestCo2 >= 700) {
+    badgeEl.textContent = "⚡ Waspada Sirkulasi";
+    badgeEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200";
+    if (iconBgEl) iconBgEl.className = "p-3 bg-amber-100 text-amber-600 rounded-2xl";
+
+    step1El.textContent = "Konsentrasi CO₂ mulai meningkat melebihi batas ideal.";
+    step2El.textContent = "Tingkatkan sirkulasi Exhaust Fan ke kecepatan sedang (Medium Speed).";
+    step3El.textContent = "Periksa saluran udara alami / buka ventilasi pintu tambahan.";
+  } else {
+    badgeEl.textContent = "🟢 Kualitas Udara Optimal";
+    badgeEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200";
+    if (iconBgEl) iconBgEl.className = "p-3 bg-emerald-50 text-emerald-600 rounded-2xl";
+
+    step1El.textContent = "Kualitas udara sangat baik & segar. Sirkulasi stabil.";
+    step2El.textContent = "Operasikan Exhaust Fan kecepatan normal standar (Eco Mode).";
+    step3El.textContent = "Aman untuk seluruh aktivitas pekerjaan & kunjungan area.";
+  }
 }
 
 // === 4. Render Tabel Data Historis ===

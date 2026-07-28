@@ -226,6 +226,59 @@
         </div>
       </div>
 
+      <!-- Kartu Rekomendasi Tindakan Otomatis (Smart Action Advisory) -->
+      <div id="actionAdvisoryCard" class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm transition-all duration-300">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div class="flex items-center gap-3">
+            <div id="advisoryIconBg" class="p-3 bg-emerald-50 text-emerald-600 rounded-2xl transition duration-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-base font-extrabold text-slate-900">Rekomendasi Tindakan Operasional</h3>
+                <span id="advisoryBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                  Kualitas Udara Optimal
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">Panduan langkah otomatis bagi pengelola gedung berdasarkan ambang CO₂</p>
+            </div>
+          </div>
+          <div class="text-right flex items-center md:justify-end gap-2">
+            <span class="text-xs font-semibold text-slate-400">Target Ideal:</span>
+            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200/60">&lt; 700 ppm</span>
+          </div>
+        </div>
+
+        <!-- Detail Langkah Tindakan Step-by-Step -->
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/60 flex items-start gap-3">
+            <div class="p-2 bg-white rounded-lg shadow-xs text-slate-700 font-extrabold text-xs shrink-0 border border-slate-200/60">01</div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Status Sirkulasi</h4>
+              <p id="actionStep1" class="text-xs text-slate-600 mt-1 font-medium">Menganalisis kondisi udara...</p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/60 flex items-start gap-3">
+            <div class="p-2 bg-white rounded-lg shadow-xs text-slate-700 font-extrabold text-xs shrink-0 border border-slate-200/60">02</div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Instruksi Exhaust Fan</h4>
+              <p id="actionStep2" class="text-xs text-slate-600 mt-1 font-medium">Menganalisis kebutuhan blower...</p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/60 flex items-start gap-3">
+            <div class="p-2 bg-white rounded-lg shadow-xs text-slate-700 font-extrabold text-xs shrink-0 border border-slate-200/60">03</div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Prosedur Keamanan</h4>
+              <p id="actionStep3" class="text-xs text-slate-600 mt-1 font-medium">Menganalisis protokol area...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Filter Waktu & Controls Grafik Otomatis -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
