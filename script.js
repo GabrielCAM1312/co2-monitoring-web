@@ -1,5 +1,8 @@
 // === Konfigurasi Mode ===
-let useDummyData = true; // ubah ke false jika sudah terhubung ke Firebase
+let useDummyData = false; // Diubah ke false agar terhubung langsung ke Supabase
+
+// Ambil nama tabel dari supabase-config.js atau gunakan default "monitoring"
+const getTableName = () => (typeof SUPABASE_TABLE_NAME !== "undefined" ? SUPABASE_TABLE_NAME : "monitoring");
 
 // === Data Dummy ===
 const dummyData = [
@@ -108,22 +111,61 @@ function updateChart(dataset) {
   co2Chart.update();
 }
 
-// === Firebase Listener ===
-if (!useDummyData) {
-  const co2Ref = database.ref("co2_data");
-  co2Ref.on("value", snapshot => {
-    const firebaseData = snapshot.val();
-    if (firebaseData) {
-      data = Object.values(firebaseData);
+// === Supabase Integration ===
+async function fetchSupabaseData() {
+  try {
+    const { data: fetchedData, error } = await supabase
+      .from(getTableName())
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+
+    if (fetchedData && fetchedData.length > 0) {
+      // Petakan kolom created_at atau waktu secara fleksibel
+      data = fetchedData.reverse().map(row => ({
+        waktu: row.created_at ? new Date(row.created_at).toLocaleString("id-ID") : row.waktu,
+        co2: row.co2
+      }));
       updateChart(data);
       renderTable(data);
       updateStatus();
     }
-  }, error => {
-    console.error("Firebase error:", error);
-    alert("Gagal terhubung ke Firebase, beralih ke Dummy Mode.");
+  } catch (error) {
+    console.error("Gagal terhubung ke Supabase:", error);
+    alert("Gagal terhubung ke Supabase (" + error.message + "), beralih ke Dummy Mode.");
     useDummyData = true;
-  });
+  }
+}
+
+function subscribeSupabaseRealtime() {
+  try {
+    supabase
+      .channel("co2_realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: getTableName() },
+        (payload) => {
+          const newData = {
+            waktu: payload.new.created_at ? new Date(payload.new.created_at).toLocaleString("id-ID") : payload.new.waktu,
+            co2: payload.new.co2
+          };
+          data.push(newData);
+          updateChart(data);
+          renderTable(data);
+          updateStatus();
+        }
+      )
+      .subscribe();
+  } catch (err) {
+    console.warn("Gagal mengaktifkan realtime listener:", err);
+  }
+}
+
+if (!useDummyData) {
+  fetchSupabaseData();
+  subscribeSupabaseRealtime();
 }
 
 // === Navigasi Antar Section ===
