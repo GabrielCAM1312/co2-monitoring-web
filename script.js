@@ -172,11 +172,11 @@ function resetGraph() {
 
 // Helper aman untuk mendapatkan Supabase Client Instance
 function getSupabaseClient() {
+  if (window.supabaseClient && typeof window.supabaseClient.from === "function") {
+    return window.supabaseClient;
+  }
   if (window.supabase && typeof window.supabase.from === "function") {
     return window.supabase;
-  }
-  if (typeof supabase !== "undefined" && supabase && typeof supabase.from === "function") {
-    return supabase;
   }
   return null;
 }
