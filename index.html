@@ -308,10 +308,10 @@
 
       <!-- Area Visualisasi Grafik -->
       <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
-        <!-- Toolbar Mode Tampilan Grafik & Threshold Legend -->
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-          <div class="flex items-center gap-2.5">
-            <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+        <!-- Header Toolbar Grafik -->
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
               </svg>
@@ -323,41 +323,45 @@
           </div>
 
           <!-- 3 Mode Tampilan Grafik Switcher -->
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="bg-slate-100/80 p-1 rounded-xl flex items-center gap-1 border border-slate-200/60">
+          <div class="flex flex-wrap items-center gap-2.5">
+            <div class="bg-slate-100/90 p-1 rounded-xl flex items-center gap-1 border border-slate-200/60 shadow-xs">
               <button onclick="setChartMode('line')" id="mode-btn-line"
                 class="chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow-xs">
-                📈 Mode Garis
+                📈 Garis
               </button>
               <button onclick="setChartMode('bar')" id="mode-btn-bar"
                 class="chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 bg-transparent">
-                📊 Mode Batang
+                📊 Batang
               </button>
               <button onclick="setChartMode('stepped')" id="mode-btn-stepped"
                 class="chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 bg-transparent">
-                🎯 Mode Stepped
+                🎯 Stepped
               </button>
-            </div>
-
-            <!-- Keterangan Warna Thresholds (Color Key Legend) -->
-            <div class="hidden xl:flex items-center gap-2 text-xs font-semibold">
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Normal
-              </span>
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200/60">
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Waspada
-              </span>
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-50 text-orange-700 border border-orange-200/60">
-                <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> Buruk
-              </span>
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 border border-red-200/60">
-                <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Kritis
-              </span>
             </div>
           </div>
         </div>
 
-        <div class="relative w-full h-[380px] md:h-[440px]">
+        <!-- Legend Bar Kategori Kualitas Udara -->
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50/80 p-3 rounded-xl border border-slate-200/50 text-xs font-semibold">
+          <span class="text-slate-500 font-bold">Kategori Ambang Udara:</span>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-100/70 text-emerald-800 border border-emerald-200/60">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Normal (&lt; 700 ppm)
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100/70 text-amber-800 border border-amber-200/60">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Waspada (700 - 999)
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-100/70 text-orange-800 border border-orange-200/60">
+              <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> Buruk (1000 - 1999)
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-100/70 text-red-800 border border-red-200/60">
+              <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Kritis (&ge; 2000)
+            </span>
+          </div>
+        </div>
+
+        <!-- Canvas Container dengan Backdrop Modern -->
+        <div class="relative w-full h-[380px] md:h-[430px] p-2 bg-gradient-to-b from-slate-50/30 to-white rounded-xl border border-slate-100">
           <canvas id="co2Chart"></canvas>
         </div>
       </div>
