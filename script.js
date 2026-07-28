@@ -21,7 +21,41 @@ const gradientBg = ctx.createLinearGradient(0, 0, 0, 400);
 gradientBg.addColorStop(0, "rgba(16, 185, 129, 0.25)");
 gradientBg.addColorStop(1, "rgba(16, 185, 129, 0.0)");
 
-// Plugin custom 1: Menggambar garis vertikal panduan kursor (Vertical Crosshair Line saat Hover)
+// Plugin custom 1: Menggambar area latar belakang warna zona kualitas udara (Air Quality Zone Bands)
+const chartZoneBandsPlugin = {
+  id: 'chartZoneBands',
+  beforeDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    if (!scales || !scales.y || !chartArea) return;
+    const { left, right, top, bottom } = chartArea;
+    const y = scales.y;
+
+    const zones = [
+      { min: 0, max: 700, fill: "rgba(16, 185, 129, 0.03)" },
+      { min: 700, max: 1000, fill: "rgba(245, 158, 11, 0.04)" },
+      { min: 1000, max: 2000, fill: "rgba(249, 115, 22, 0.05)" },
+      { min: 2000, max: 5000, fill: "rgba(239, 68, 68, 0.06)" }
+    ];
+
+    ctx.save();
+    zones.forEach(z => {
+      const yMinPos = y.getPixelForValue(z.min);
+      const yMaxPos = y.getPixelForValue(z.max);
+
+      const zoneTop = Math.max(top, Math.min(bottom, yMaxPos));
+      const zoneBottom = Math.min(bottom, Math.max(top, yMinPos));
+      const zoneHeight = zoneBottom - zoneTop;
+
+      if (zoneHeight > 0) {
+        ctx.fillStyle = z.fill;
+        ctx.fillRect(left, zoneTop, right - left, zoneHeight);
+      }
+    });
+    ctx.restore();
+  }
+};
+
+// Plugin custom 2: Menggambar garis vertikal panduan kursor (Vertical Crosshair Line saat Hover)
 const crosshairPlugin = {
   id: 'crosshair',
   afterDraw(chart) {
@@ -45,7 +79,7 @@ const crosshairPlugin = {
   }
 };
 
-// Plugin custom 2: Menggambar garis batas ambang kualitas udara (Threshold Badge Lines)
+// Plugin custom 3: Menggambar garis batas ambang kualitas udara (Threshold Badge Lines)
 const thresholdLinesPlugin = {
   id: 'thresholdLines',
   afterDraw(chart) {
@@ -107,7 +141,7 @@ const thresholdLinesPlugin = {
 
 const co2Chart = new Chart(ctx, {
   type: "line",
-  plugins: [crosshairPlugin, thresholdLinesPlugin],
+  plugins: [chartZoneBandsPlugin, crosshairPlugin, thresholdLinesPlugin],
   data: {
     labels: [],
     datasets: [{
