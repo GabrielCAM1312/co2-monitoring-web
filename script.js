@@ -305,30 +305,17 @@ function showLast100() {
     btn100.className = "preset-btn px-3.5 py-2 rounded-xl font-bold text-xs bg-emerald-600 text-white border border-emerald-600 shadow-sm transition";
   }
 
+  // Biarkan input waktu tetap kosong secara default
+  const startEl = document.getElementById("startTime");
+  const endEl = document.getElementById("endTime");
+  if (startEl) startEl.value = "";
+  if (endEl) endEl.value = "";
+
   if (allSupabaseRecords.length === 0) return;
 
   // Ambil 100 data terbaru (terakhir) dari rekaman database
   data = allSupabaseRecords.slice(-100);
   updateChart(data);
-
-  // Auto-fill input jam berdasarkan data terawal dan terbaru dari 100 data terakhir
-  if (data.length > 0) {
-    const firstItem = data[0];
-    const lastItem = data[data.length - 1];
-
-    const formatInputDateTime = (d) => {
-      const tzOffset = d.getTimezoneOffset() * 60000;
-      return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
-    };
-
-    const startEl = document.getElementById("startTime");
-    const endEl = document.getElementById("endTime");
-
-    if (startEl && endEl && firstItem.timestamp && lastItem.timestamp) {
-      startEl.value = formatInputDateTime(new Date(firstItem.timestamp));
-      endEl.value = formatInputDateTime(new Date(lastItem.timestamp));
-    }
-  }
 }
 
 function filterQuick(hours) {
