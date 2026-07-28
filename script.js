@@ -294,6 +294,41 @@ function updateChart(dataset) {
 }
 
 // === 6. Filter Preset Otomatis & Custom Grafik Dashboard ===
+function showLast100() {
+  document.querySelectorAll(".preset-btn").forEach(btn => {
+    btn.className = "preset-btn px-3.5 py-2 rounded-xl font-bold text-xs border border-slate-200 text-slate-600 bg-white hover:bg-slate-100 transition";
+  });
+  const btn100 = document.getElementById("preset-100");
+  if (btn100) {
+    btn100.className = "preset-btn px-3.5 py-2 rounded-xl font-bold text-xs bg-emerald-600 text-white border border-emerald-600 shadow-sm transition";
+  }
+
+  if (allSupabaseRecords.length === 0) return;
+
+  // Ambil 100 data terbaru (terakhir) dari rekaman database
+  data = allSupabaseRecords.slice(-100);
+  updateChart(data);
+
+  // Auto-fill input jam berdasarkan data terawal dan terbaru dari 100 data terakhir
+  if (data.length > 0) {
+    const firstItem = data[0];
+    const lastItem = data[data.length - 1];
+
+    const formatInputDateTime = (d) => {
+      const tzOffset = d.getTimezoneOffset() * 60000;
+      return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+    };
+
+    const startEl = document.getElementById("startTime");
+    const endEl = document.getElementById("endTime");
+
+    if (startEl && endEl && firstItem.timestamp && lastItem.timestamp) {
+      startEl.value = formatInputDateTime(new Date(firstItem.timestamp));
+      endEl.value = formatInputDateTime(new Date(lastItem.timestamp));
+    }
+  }
+}
+
 function filterQuick(hours) {
   document.querySelectorAll(".preset-btn").forEach(btn => {
     btn.className = "preset-btn px-3.5 py-2 rounded-xl font-bold text-xs border border-slate-200 text-slate-600 bg-white hover:bg-slate-100 transition";
@@ -342,20 +377,7 @@ function applyTimeFilter() {
 }
 
 function resetGraph() {
-  // 1. Kosongkan nilai input tanggal & jam custom (startTime dan endTime)
-  const startEl = document.getElementById("startTime");
-  const endEl = document.getElementById("endTime");
-  if (startEl) startEl.value = "";
-  if (endEl) endEl.value = "";
-
-  // 2. Hapus highlight aktif dari tombol preset durasi
-  document.querySelectorAll(".preset-btn").forEach(btn => {
-    btn.className = "preset-btn px-3.5 py-2 rounded-xl font-bold text-xs border border-slate-200 text-slate-600 bg-white hover:bg-slate-100 transition";
-  });
-
-  // 3. Tampilkan kembali grafik dengan seluruh rekaman data dari database
-  data = [...allSupabaseRecords];
-  updateChart(data);
+  showLast100();
 }
 
 // Helper aman untuk mendapatkan Supabase Client Instance
@@ -404,10 +426,11 @@ async function fetchSupabaseData() {
 
       // Urutkan secara kronologis (terlama ke terbaru) untuk grafik
       allSupabaseRecords = res.data.reverse().map(parseRowData);
-      data = [...allSupabaseRecords];
-      dataHistorisFiltered = [...data];
+      dataHistorisFiltered = [...allSupabaseRecords];
 
-      updateChart(data);
+      // Tampilkan 100 data terakhir secara otomatis pada grafik
+      showLast100();
+
       renderTable(dataHistorisFiltered);
       updateStatus();
     }
