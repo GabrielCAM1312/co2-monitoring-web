@@ -206,7 +206,7 @@ function getSupabaseClient() {
   return null;
 }
 
-// === 7. Fetch Supabase Data (50 Data Terbaru) ===
+// === 7. Fetch Supabase Data (Data Penuh 24 Jam / 1 Hari) ===
 async function fetchSupabaseData() {
   const statusEl = document.getElementById("connectionStatus");
   const client = getSupabaseClient();
@@ -220,19 +220,29 @@ async function fetchSupabaseData() {
   }
 
   try {
-    // Coba urutkan berdasarkan kolom 'waktu'
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const oneDayAgoISO = oneDayAgo.toISOString();
+
+    // 1. Coba query data 24 jam terakhir berdasarkan created_at
     let res = await client
       .from(getTableName())
       .select("*")
-      .order("waktu", { ascending: false })
-      .limit(50);
+      .gte("created_at", oneDayAgoISO)
+      .order("created_at", { ascending: true });
 
-    // Jika kolom 'waktu' tidak ada, coba urutkan berdasarkan 'created_at' atau ambil tanpa order
-    if (res.error && res.error.code === "42703") {
+    // 2. Jika tidak ada kolom created_at atau error, ambil data penuh berdasarkan 'waktu' atau select *
+    if (res.error || !res.data || res.data.length === 0) {
       res = await client
         .from(getTableName())
         .select("*")
-        .limit(50);
+        .order("waktu", { ascending: true });
+    }
+
+    if (res.error && res.error.code === "42703") {
+      res = await client
+        .from(getTableName())
+        .select("*");
     }
 
     if (res.error) {
@@ -243,7 +253,7 @@ async function fetchSupabaseData() {
       }
     } else if (res.data) {
       if (statusEl) {
-        statusEl.textContent = "🟢 Status Koneksi: Terhubung ke Supabase Cloud (Live)";
+        statusEl.textContent = "🟢 Status Koneksi: Terhubung ke Supabase Cloud (Live - 24 Jam Full)";
         statusEl.className = "text-sm font-semibold text-emerald-600 mt-1 flex items-center gap-1.5";
       }
 
