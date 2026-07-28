@@ -537,7 +537,7 @@ function filterQuick(hours) {
   }
 }
 
-function applyTimeFilter() {
+async function applyTimeFilter() {
   const startInput = document.getElementById("startTime").value;
   const endInput = document.getElementById("endTime").value;
   if (!startInput || !endInput) return alert("Pilih kedua rentang waktu terlebih dahulu.");
@@ -547,15 +547,40 @@ function applyTimeFilter() {
 
   if (isNaN(startMs) || isNaN(endMs)) return alert("Format tanggal/waktu yang dimasukkan tidak valid.");
 
-  const filtered = allSupabaseRecords.filter(item => {
+  // 1. Coba filter dari data lokal yang tersimpan di memori
+  let filtered = allSupabaseRecords.filter(item => {
     return !isNaN(item.timestamp) && item.timestamp >= startMs && item.timestamp <= endMs;
   });
+
+  // 2. Jika data tidak ada di memori lokal (karena hanya load 1000 data terbaru), query ke Supabase Database
+  if (filtered.length === 0) {
+    const client = getSupabaseClient();
+    if (client) {
+      const startTimeStr = startInput.includes("T") ? startInput : startInput + "T00:00:00";
+      const endTimeStr = endInput.includes("T") ? (endInput.length === 16 ? endInput + ":59" : endInput) : endInput + "T23:59:59";
+
+      let res = await client
+        .from(getTableName())
+        .select("*")
+        .gte("waktu", startTimeStr)
+        .lte("waktu", endTimeStr)
+        .order("id", { ascending: true })
+        .limit(2000);
+
+      if (!res.error && res.data && res.data.length > 0) {
+        filtered = res.data.map(parseRowData);
+      }
+    }
+  }
 
   if (filtered.length === 0) {
     alert("Tidak ditemukan data pada rentang waktu yang dipilih.");
     return;
   }
+
+  dataHistorisFiltered = filtered;
   updateChart(filtered);
+  renderTable(filtered);
 }
 
 function resetGraph() {
@@ -652,43 +677,55 @@ if (filterForm) {
   filterForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const startVal = document.getElementById("startDate").value; // e.g. "2026-07-10"
-    const endVal = document.getElementById("endDate").value;     // e.g. "2026-07-12"
+    const startVal = document.getElementById("startDate").value; // e.g. "2026-07-07"
+    const endVal = document.getElementById("endDate").value;     // e.g. "2026-07-08"
 
     if (!startVal || !endVal) return alert("Pilih tanggal awal dan tanggal akhir terlebih dahulu.");
 
     const client = getSupabaseClient();
-    if (!client) return alert("Supabase belum terhubung.");
+    let filteredResults = [];
 
-    const startISO = startVal + "T00:00:00";
-    const endISO = endVal + "T23:59:59";
+    if (client) {
+      // Query Supabase dengan string fleksibel (mendukung format ISO 'T' dan Space ' ')
+      let res = await client
+        .from(getTableName())
+        .select("*")
+        .gte("waktu", startVal)
+        .lte("waktu", endVal + "T23:59:59")
+        .order("id", { ascending: true })
+        .limit(2000);
 
-    // Query Supabase secara langsung dengan rentang tanggal ISO T00:00:00 s.d T23:59:59
-    let res = await client
-      .from(getTableName())
-      .select("*")
-      .gte("waktu", startISO)
-      .lte("waktu", endISO)
-      .order("waktu", { ascending: true })
-      .limit(1000);
+      if (res.error || !res.data || res.data.length === 0) {
+        res = await client
+          .from(getTableName())
+          .select("*")
+          .gte("waktu", startVal + "T00:00:00")
+          .lte("waktu", endVal + "T23:59:59")
+          .order("id", { ascending: true })
+          .limit(2000);
+      }
 
-    if (!res.error && res.data && res.data.length > 0) {
-      dataHistorisFiltered = res.data.map(parseRowData);
-      renderTable(dataHistorisFiltered);
-    } else {
+      if (!res.error && res.data && res.data.length > 0) {
+        filteredResults = res.data.map(parseRowData);
+      }
+    }
+
+    if (filteredResults.length === 0 && allSupabaseRecords.length > 0) {
       // Fallback: Filter dari data lokal menggunakan milidetik
       const startMs = new Date(startVal + "T00:00:00").getTime();
       const endMs = new Date(endVal + "T23:59:59.999").getTime();
 
-      dataHistorisFiltered = allSupabaseRecords.filter(item => {
+      filteredResults = allSupabaseRecords.filter(item => {
         return !isNaN(item.timestamp) && item.timestamp >= startMs && item.timestamp <= endMs;
       });
+    }
 
-      if (dataHistorisFiltered.length === 0) {
-        alert(`Tidak ditemukan data historis pada tanggal ${startVal} s.d ${endVal}.`);
-      }
-
+    if (filteredResults.length === 0) {
+      alert(`Tidak ditemukan data historis pada tanggal ${startVal} s.d ${endVal}.`);
+    } else {
+      dataHistorisFiltered = filteredResults;
       renderTable(dataHistorisFiltered);
+      updateChart(dataHistorisFiltered);
     }
   });
 }
