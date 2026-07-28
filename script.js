@@ -195,28 +195,44 @@ async function fetchSupabaseData() {
   }
 
   try {
-    const { data: fetchedData, error } = await client
+    // Coba urutkan berdasarkan kolom 'waktu'
+    let res = await client
       .from(getTableName())
       .select("*")
-      .order("created_at", { ascending: false })
+      .order("waktu", { ascending: false })
       .limit(50);
 
-    if (error) {
-      console.error("Gagal terhubung ke Supabase:", error);
+    // Jika kolom 'waktu' tidak ada, coba urutkan berdasarkan 'created_at' atau ambil tanpa order
+    if (res.error && res.error.code === "42703") {
+      res = await client
+        .from(getTableName())
+        .select("*")
+        .limit(50);
+    }
+
+    if (res.error) {
+      console.error("Gagal terhubung ke Supabase:", res.error);
       if (statusEl) {
-        statusEl.textContent = "❌ Status Koneksi: Gagal Terhubung! (" + error.message + ")";
+        statusEl.textContent = "❌ Status Koneksi: Gagal Terhubung! (" + res.error.message + ")";
         statusEl.className = "text-sm font-semibold text-red-600 mt-1 flex items-center gap-1.5";
       }
-    } else if (fetchedData) {
+    } else if (res.data) {
       if (statusEl) {
         statusEl.textContent = "🟢 Status Koneksi: Terhubung ke Supabase Cloud (Live)";
         statusEl.className = "text-sm font-semibold text-emerald-600 mt-1 flex items-center gap-1.5";
       }
 
-      data = fetchedData.reverse().map(row => ({
-        waktu: row.created_at ? new Date(row.created_at).toLocaleString("id-ID") : row.waktu,
-        co2: row.co2
-      }));
+      data = res.data.map(row => {
+        let rawTime = row.waktu || row.created_at || row.timestamp;
+        let formattedTime = rawTime;
+        if (rawTime && !isNaN(Date.parse(rawTime))) {
+          formattedTime = new Date(rawTime).toLocaleString("id-ID");
+        }
+        return {
+          waktu: formattedTime || "N/A",
+          co2: Number(row.co2 !== undefined ? row.co2 : (row.kadar_co2 !== undefined ? row.kadar_co2 : 0))
+        };
+      });
 
       dataHistorisFiltered = [...data];
       updateChart(data);
@@ -244,20 +260,34 @@ if (filterForm) {
     const startISO = new Date(startDate).toISOString();
     const endISO = new Date(new Date(endDate).setHours(23, 59, 59, 999)).toISOString();
 
-    const { data: historisData, error } = await client
+    let res = await client
       .from(getTableName())
       .select("*")
-      .gte("created_at", startISO)
-      .lte("created_at", endISO)
-      .order("created_at", { ascending: true });
+      .gte("waktu", startDate)
+      .lte("waktu", endDate);
 
-    if (error) {
-      alert("Gagal memuat data historis: " + error.message);
-    } else if (historisData) {
-      dataHistorisFiltered = historisData.map(row => ({
-        waktu: row.created_at ? new Date(row.created_at).toLocaleString("id-ID") : row.waktu,
-        co2: row.co2
-      }));
+    if (res.error) {
+      res = await client
+        .from(getTableName())
+        .select("*")
+        .gte("created_at", startISO)
+        .lte("created_at", endISO);
+    }
+
+    if (res.error) {
+      alert("Gagal memuat data historis: " + res.error.message);
+    } else if (res.data) {
+      dataHistorisFiltered = res.data.map(row => {
+        let rawTime = row.waktu || row.created_at || row.timestamp;
+        let formattedTime = rawTime;
+        if (rawTime && !isNaN(Date.parse(rawTime))) {
+          formattedTime = new Date(rawTime).toLocaleString("id-ID");
+        }
+        return {
+          waktu: formattedTime || "N/A",
+          co2: Number(row.co2 !== undefined ? row.co2 : (row.kadar_co2 !== undefined ? row.kadar_co2 : 0))
+        };
+      });
       renderTable(dataHistorisFiltered);
     }
   });
@@ -290,9 +320,14 @@ if (realtimeClient && typeof realtimeClient.channel === "function") {
     realtimeClient
       .channel("co2_realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: getTableName() }, (payload) => {
+        let rawTime = payload.new.waktu || payload.new.created_at || payload.new.timestamp;
+        let formattedTime = rawTime;
+        if (rawTime && !isNaN(Date.parse(rawTime))) {
+          formattedTime = new Date(rawTime).toLocaleString("id-ID");
+        }
         const newData = {
-          waktu: payload.new.created_at ? new Date(payload.new.created_at).toLocaleString("id-ID") : payload.new.waktu,
-          co2: payload.new.co2
+          waktu: formattedTime || "N/A",
+          co2: Number(payload.new.co2 !== undefined ? payload.new.co2 : (payload.new.kadar_co2 !== undefined ? payload.new.kadar_co2 : 0))
         };
         data.push(newData);
         updateChart(data);
