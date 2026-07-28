@@ -425,6 +425,7 @@ function updateChart(dataset) {
     return item.waktu;
   };
 
+  const co2Values = limitedDataset.map(item => item.co2);
   if (co2Values.length > 0) {
     const minVal = Math.min(...co2Values);
     const maxVal = Math.max(...co2Values);
