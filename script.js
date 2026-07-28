@@ -263,37 +263,76 @@ const filterForm = document.getElementById("filterForm");
 if (filterForm) {
   filterForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    const startVal = document.getElementById("startDate").value;
+    const endVal = document.getElementById("endDate").value;
+
+    if (!startVal || !endVal) return alert("Pilih tanggal awal dan tanggal akhir terlebih dahulu.");
+
+    // Atur jam awal 00:00:00 dan jam akhir 23:59:59 agar seluruh hari tercakup
+    const startDateObj = new Date(startVal + "T00:00:00");
+    const endDateObj = new Date(endVal + "T23:59:59.999");
+
+    const startMs = startDateObj.getTime();
+    const endMs = endDateObj.getTime();
+
+    if (isNaN(startMs) || isNaN(endMs)) {
+      return alert("Format tanggal yang dimasukkan tidak valid.");
+    }
+
     const client = getSupabaseClient();
-    if (!client) {
-      return alert("Supabase belum terhubung. Silakan periksa kredensial Supabase Anda.");
+    let fetchedResults = null;
+
+    if (client) {
+      try {
+        const startISO = startDateObj.toISOString();
+        const endISO = endDateObj.toISOString();
+
+        // 1. Coba query Supabase dengan rentang waktu presisi 00:00:00 s.d 23:59:59
+        let res = await client
+          .from(getTableName())
+          .select("*")
+          .gte("created_at", startISO)
+          .lte("created_at", endISO)
+          .order("created_at", { ascending: true });
+
+        // 2. Jika kolom 'created_at' tidak ada, coba dengan kolom 'waktu'
+        if (res.error && res.error.code === "42703") {
+          res = await client
+            .from(getTableName())
+            .select("*")
+            .gte("waktu", startVal)
+            .lte("waktu", endVal + " 23:59:59")
+            .order("waktu", { ascending: true });
+        }
+
+        if (!res.error && res.data && res.data.length > 0) {
+          fetchedResults = res.data.map(parseRowData);
+        }
+      } catch (err) {
+        console.warn("Filtering Supabase gagal, menggunakan fallback filter lokal:", err);
+      }
     }
 
-    const startDate = document.getElementById("startDate").value;
-    const endDate = document.getElementById("endDate").value;
-
-    const startISO = new Date(startDate).toISOString();
-    const endISO = new Date(new Date(endDate).setHours(23, 59, 59, 999)).toISOString();
-
-    let res = await client
-      .from(getTableName())
-      .select("*")
-      .gte("waktu", startDate)
-      .lte("waktu", endDate);
-
-    if (res.error) {
-      res = await client
-        .from(getTableName())
-        .select("*")
-        .gte("created_at", startISO)
-        .lte("created_at", endISO);
+    // Jika query Supabase mengembalikan data, gunakan hasil tersebut
+    if (fetchedResults && fetchedResults.length > 0) {
+      dataHistorisFiltered = fetchedResults;
+    } else {
+      // Fallback: Filter dari data lokal yang ada secara presisi berdasarkan timestamp milidetik
+      dataHistorisFiltered = data.filter(item => {
+        let itemMs = item.timestamp;
+        if (isNaN(itemMs)) {
+          itemMs = new Date(item.rawTime || item.waktu).getTime();
+        }
+        return !isNaN(itemMs) && itemMs >= startMs && itemMs <= endMs;
+      });
     }
 
-    if (res.error) {
-      alert("Gagal memuat data historis: " + res.error.message);
-    } else if (res.data) {
-      dataHistorisFiltered = res.data.map(parseRowData);
-      renderTable(dataHistorisFiltered);
+    if (dataHistorisFiltered.length === 0) {
+      alert("Tidak ditemukan data historis pada rentang tanggal tersebut.");
     }
+
+    renderTable(dataHistorisFiltered);
   });
 }
 
