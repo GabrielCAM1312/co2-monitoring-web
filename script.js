@@ -21,7 +21,31 @@ const gradientBg = ctx.createLinearGradient(0, 0, 0, 400);
 gradientBg.addColorStop(0, "rgba(16, 185, 129, 0.25)");
 gradientBg.addColorStop(1, "rgba(16, 185, 129, 0.0)");
 
-// Plugin custom untuk menggambar garis batas ambang kualitas udara (Threshold Reference Lines)
+// Plugin custom 1: Menggambar garis vertikal panduan kursor (Vertical Crosshair Line saat Hover)
+const crosshairPlugin = {
+  id: 'crosshair',
+  afterDraw(chart) {
+    if (chart.tooltip && chart.tooltip._active && chart.tooltip._active.length) {
+      const activePoint = chart.tooltip._active[0];
+      const { ctx } = chart;
+      const x = activePoint.element.x;
+      const topY = chart.scales.y.top;
+      const bottomY = chart.scales.y.bottom;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.setLineDash([4, 4]);
+      ctx.moveTo(x, topY);
+      ctx.lineTo(x, bottomY);
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.7)";
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+};
+
+// Plugin custom 2: Menggambar garis batas ambang kualitas udara (Threshold Badge Lines)
 const thresholdLinesPlugin = {
   id: 'thresholdLines',
   afterDraw(chart) {
@@ -31,28 +55,50 @@ const thresholdLinesPlugin = {
     const y = scales.y;
 
     const thresholds = [
-      { value: 700, label: "Batas Waspada (700 ppm)", color: "rgba(245, 158, 11, 0.75)", dash: [5, 4] },
-      { value: 1000, label: "Batas Buruk (1000 ppm)", color: "rgba(249, 115, 22, 0.75)", dash: [5, 4] },
-      { value: 2000, label: "Batas Kritis (2000 ppm)", color: "rgba(239, 68, 68, 0.85)", dash: [4, 4] }
+      { value: 700, label: "700 ppm (Waspada)", color: "#f59e0b", bg: "rgba(254, 243, 199, 0.95)" },
+      { value: 1000, label: "1000 ppm (Buruk)", color: "#f97316", bg: "rgba(255, 237, 213, 0.95)" },
+      { value: 2000, label: "2000 ppm (Kritis)", color: "#ef4444", bg: "rgba(254, 226, 226, 0.95)" }
     ];
 
     ctx.save();
     thresholds.forEach(t => {
       const yPos = y.getPixelForValue(t.value);
       if (yPos >= top && yPos <= bottom) {
+        // Garis batas putus-putus
         ctx.beginPath();
-        ctx.setLineDash(t.dash);
+        ctx.setLineDash([5, 4]);
         ctx.strokeStyle = t.color;
         ctx.lineWidth = 1.5;
         ctx.moveTo(left, yPos);
         ctx.lineTo(right, yPos);
         ctx.stroke();
 
-        // Badge Teks Label Garis Ambang Batas
-        ctx.font = "600 10px 'Plus Jakarta Sans', sans-serif";
+        // Badge pill label di ujung kanan grafik
+        ctx.font = "bold 10px 'Plus Jakarta Sans', sans-serif";
+        const textWidth = ctx.measureText(t.label).width;
+        const badgeWidth = textWidth + 14;
+        const badgeHeight = 18;
+        const badgeX = right - badgeWidth - 6;
+        const badgeY = yPos - 9;
+
+        // Background pill
+        ctx.fillStyle = t.bg;
+        if (typeof ctx.roundRect === "function") {
+          ctx.beginPath();
+          ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, 6);
+          ctx.fill();
+          ctx.strokeStyle = t.color;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } else {
+          ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
+        }
+
+        // Teks label
         ctx.fillStyle = t.color;
-        ctx.textAlign = "right";
-        ctx.fillText(t.label, right - 8, yPos - 5);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(t.label, badgeX + badgeWidth / 2, badgeY + badgeHeight / 2);
       }
     });
     ctx.restore();
@@ -61,7 +107,7 @@ const thresholdLinesPlugin = {
 
 const co2Chart = new Chart(ctx, {
   type: "line",
-  plugins: [thresholdLinesPlugin],
+  plugins: [crosshairPlugin, thresholdLinesPlugin],
   data: {
     labels: [],
     datasets: [{
@@ -89,7 +135,7 @@ const co2Chart = new Chart(ctx, {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: "rgba(15, 23, 42, 0.92)",
+        backgroundColor: "rgba(15, 23, 42, 0.94)",
         titleFont: { family: 'Plus Jakarta Sans', size: 13, weight: 'bold' },
         bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
         padding: 12,
@@ -103,10 +149,10 @@ const co2Chart = new Chart(ctx, {
           },
           label: (context) => {
             const val = context.parsed.y;
-            let status = "🟢 Normal";
+            let status = "🟢 Normal / Safe";
             if (val >= 2000) status = "🚨 Kritis / Berbahaya";
             else if (val >= 1000) status = "⚠️ Buruk / Sumpek";
-            else if (val >= 700) status = "⚡ Waspada";
+            else if (val >= 700) status = "⚡ Waspada Sirkulasi";
             return [
               ` Kadar CO₂: ${val} ppm`,
               ` Status: ${status}`
@@ -117,7 +163,7 @@ const co2Chart = new Chart(ctx, {
     },
     scales: {
       y: { 
-        beginAtZero: true, 
+        beginAtZero: false, 
         grid: { color: "rgba(226, 232, 240, 0.6)" },
         ticks: { font: { family: 'Plus Jakarta Sans', size: 11 }, color: "#64748b" },
         title: { display: true, text: "Konsentrasi (ppm)", font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' }, color: "#475569" }
@@ -127,9 +173,9 @@ const co2Chart = new Chart(ctx, {
         ticks: { 
           font: { family: 'Plus Jakarta Sans', size: 11 }, 
           color: "#64748b",
-          maxTicksLimit: 10,  // Pembatasan maksimal 10 label agar tidak saling menumpuk
-          maxRotation: 0,     // Label tetap mendatar rapi
-          autoSkip: true      // Otomatis melompati label jika terlalu rapat
+          maxTicksLimit: 7,   // Maksimal 7 penanda waktu agar jarak antar teks sangat longgar dan rapi
+          maxRotation: 0,     // Teks tetap murni mendatar
+          autoSkip: true
         },
         title: { display: true, text: "Tanggal & Waktu Pengamatan (Tgl Bln, Jam:Menit)", font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' }, color: "#475569" }
       }
@@ -358,6 +404,15 @@ function updateChart(dataset) {
     }
     return item.waktu;
   };
+
+  // Skala Y-axis dinamis yang proporsional agar kurva grafik tidak gepeng
+  const co2Values = limitedDataset.map(item => item.co2);
+  if (co2Values.length > 0) {
+    const minVal = Math.min(...co2Values);
+    const maxVal = Math.max(...co2Values);
+    co2Chart.options.scales.y.min = Math.max(0, Math.floor((minVal - 50) / 50) * 50);
+    co2Chart.options.scales.y.suggestedMax = Math.max(1200, Math.ceil((maxVal + 100) / 100) * 100);
+  }
 
   co2Chart.data.labels = limitedDataset.map(item => formatTimeLabel(item));
   co2Chart.data.datasets[0].data = limitedDataset.map(item => item.co2);
