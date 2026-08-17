@@ -89,7 +89,7 @@ const thresholdLinesPlugin = {
     const y = scales.y;
 
     const thresholds = [
-      { value: 1000, label: "1000 ppm (Buruk)", color: "#f97316", bg: "rgba(255, 237, 213, 0.95)" },
+      { value: 1000, label: "1000 ppm (Waspada)", color: "#f97316", bg: "rgba(255, 237, 213, 0.95)" },
       { value: 2000, label: "2000 ppm (Kritis)", color: "#ef4444", bg: "rgba(254, 226, 226, 0.95)" }
     ];
 
@@ -182,9 +182,9 @@ const co2Chart = new Chart(ctx, {
           },
           label: (context) => {
             const val = context.parsed.y;
-            let status = "🟢 Normal / Safe";
+            let status = "🟢 Normal / Aman";
             if (val >= 2000) status = "🚨 Kritis / Berbahaya";
-            else if (val >= 1000) status = "⚠️ Buruk / Sumpek";
+            else if (val >= 1000) status = "⚠️ Waspada / Sumpek";
             return [
               ` Kadar CO₂: ${val} ppm`,
               ` Status: ${status}`
@@ -290,7 +290,7 @@ function updateStatus() {
     statusLabel.className = "inline-flex items-center px-4 py-2 rounded-xl text-sm font-extrabold bg-red-100 text-red-700 border border-red-200 shadow-sm";
     if (statusAdvice) statusAdvice.textContent = "Nyalakan exhaust fan & evakuasi area!";
   } else if (latest >= 1000) {
-    statusLabel.textContent = "⚠️ Buruk / Sumpek";
+    statusLabel.textContent = "⚠️ Waspada / Sumpek";
     statusLabel.className = "inline-flex items-center px-4 py-2 rounded-xl text-sm font-extrabold bg-orange-100 text-orange-700 border border-orange-200 shadow-sm";
     if (statusAdvice) statusAdvice.textContent = "Buka ventilasi & tingkatkan sirkulasi udara.";
   } else {
@@ -317,7 +317,7 @@ function updateActionAdvisory(latestCo2) {
     if (iconBgEl) iconBgEl.className = "p-3 bg-red-100 text-red-600 rounded-xl";
     textEl.textContent = "EVAKUASI AREA! Nyalakan Exhaust Fan & Blower Darurat ke Kecepatan Maksimal (100%).";
   } else if (latestCo2 >= 1000) {
-    badgeEl.textContent = "⚠️ Buruk / Sumpek";
+    badgeEl.textContent = "⚠️ Waspada / Sumpek";
     badgeEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200";
     if (iconBgEl) iconBgEl.className = "p-3 bg-orange-100 text-orange-600 rounded-xl";
     textEl.textContent = "Udara sumpek. Aktifkan Blower tambahan ke High Speed & buka ventilasi udara luar.";
@@ -343,7 +343,7 @@ function renderTable(dataset) {
     let badgeClass = "bg-emerald-100 text-emerald-700";
     let badgeText = "Normal";
     if (item.co2 >= 2000) { badgeClass = "bg-red-100 text-red-700"; badgeText = "Berbahaya"; }
-    else if (item.co2 >= 1000) { badgeClass = "bg-orange-100 text-orange-700"; badgeText = "Buruk"; }
+    else if (item.co2 >= 1000) { badgeClass = "bg-orange-100 text-orange-700"; badgeText = "Waspada"; }
 
     return `
       <tr class="hover:bg-slate-50 transition">
