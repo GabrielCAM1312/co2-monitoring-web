@@ -40,10 +40,12 @@
   <aside class="w-full md:w-64 bg-slate-900 text-white flex flex-col md:fixed md:top-0 md:left-0 md:h-screen shadow-xl z-20 transition-all duration-300">
     <div class="p-6 border-b border-slate-800 flex items-center justify-between md:justify-start gap-3">
       <div class="p-2.5 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl shadow-lg shadow-emerald-500/20 text-white flex items-center justify-center">
-        <img src="image\Logo_STMKG.png" class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
       </div>
       <div>
-        <h2 class="text-lg font-bold tracking-tight text-white">CO₂ Dashboard</h2>
+        <h2 class="text-lg font-bold tracking-tight text-white">CO₂ AirBoard</h2>
         <p class="text-xs text-slate-400 font-medium">Monitoring Basement</p>
       </div>
     </div>
@@ -72,7 +74,15 @@
       </ul>
     </nav>
 
-
+    <!-- Footer Information -->
+    <div class="p-4 m-4 bg-slate-800/80 rounded-xl border border-slate-700/50 hidden md:block">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span class="text-xs font-semibold text-emerald-400">System Active</span>
+      </div>
+      <p class="text-[11px] text-slate-400">Real-time telemetry stream via Supabase Cloud</p>
+    </div>
+  </aside>
 
   <!-- Area Konten Utama -->
   <main class="flex-1 p-4 md:p-8 md:ml-64 transition-all duration-300">
@@ -121,7 +131,7 @@
             <span class="text-4xl md:text-5xl font-black text-slate-900 tracking-tight" id="latestValue">--</span>
             <span class="text-sm font-bold text-slate-500">ppm</span>
           </div>
-          <p class="text-xs text-slate-400 mt-2 font-medium">Batas Aman Normal: &lt; 999 ppm</p>
+          <p class="text-xs text-slate-400 mt-2 font-medium">Batas Aman Normal: &lt; 700 ppm</p>
         </div>
 
         <!-- Metric Card 2: Status Udara -->
@@ -162,15 +172,7 @@
         </div>
       </div>
 
-<!-- Footer Information -->
-    <div class="p-4 m-4 bg-slate-800/80 rounded-xl border border-slate-700/50 hidden md:block">
-      <div class="flex items-center gap-2 mb-1">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-        <span class="text-xs font-semibold text-emerald-400">System Active</span>
-      </div>
-      <p class="text-[11px] text-slate-400">Real-time telemetry stream via Supabase Cloud</p>
-    </div>
-  </aside>
+
 
       <!-- Kartu Rekomendasi Tindakan Simple & Compact -->
       <div id="actionAdvisoryCard" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300">
@@ -195,7 +197,7 @@
 
         <div class="shrink-0 flex items-center gap-2">
           <span class="text-xs font-medium text-slate-400">Ambang Ideal:</span>
-          <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200/60">&lt; 999 ppm</span>
+          <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200/60">&lt; 700 ppm</span>
         </div>
       </div>
 
@@ -292,13 +294,16 @@
           <span class="text-slate-500 font-bold">Kategori Ambang Udara:</span>
           <div class="flex flex-wrap items-center gap-2">
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-100/70 text-emerald-800 border border-emerald-200/60">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Normal (&lt; 999 ppm)
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Normal (&lt; 700 ppm)
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100/70 text-amber-800 border border-amber-200/60">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Waspada (700 - 999)
             </span>
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-100/70 text-orange-800 border border-orange-200/60">
-              <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> Waspada (1000 - 1999)
+              <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> Buruk (1000 - 1999)
             </span>
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-100/70 text-red-800 border border-red-200/60">
-              <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Berbahaya (&ge; 2000)
+              <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Kritis (&ge; 2000)
             </span>
           </div>
         </div>
@@ -381,3 +386,4 @@
 </body>
 
 </html>
+
